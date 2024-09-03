@@ -18,9 +18,17 @@ print(f"读取dataB Sheet3完毕，耗时{round(time.time() - ts, 2)}秒")
 
 target_ipc_list: list[str] = list(data_b_sheet3['IPC代码'])  # 目标IPC代码 （数字技术创新类）
 
-# 将目标IPC代码中的 * 号去除
+# 处理IPC代码
 for i in range(len(target_ipc_list)):
-    target_ipc_list[i] = target_ipc_list[i].replace('*', '')
+    target_ipc = target_ipc_list[i]
+    # 如果IPC代码包含*
+    if '*' in target_ipc:
+        # 如果长度为5，直接删掉*
+        if len(target_ipc) == 5:
+            target_ipc_list[i] = target_ipc.replace('*', '')
+        else:
+            # 否则将*替换成/
+            target_ipc_list[i] = target_ipc.replace('*', '/')
 
 print(f"目标IPC代码：{target_ipc_list}")
 
@@ -34,12 +42,15 @@ for i, row in data_a.iterrows():
         continue
     count = 0
     # 继续遍历行数据
-    for _ in row:
-        for __ in target_ipc_list:
-            # 如果这个单元格的数据包含目标IPC代码，则count计数+1
-            if __ in str(_):
-                count += 1
-                break
+    for cell in row:
+        # 行数据里的内容，按大括号分组成专利列表
+        patent_list = str(cell).split(',')
+        for patent in patent_list:
+            for target_ipc in target_ipc_list:
+                # 如果这个专利包含目标IPC代码，则count计数+1
+                if target_ipc in patent:
+                    count += 1
+                    break
     new_row = {'股票代码': row['Scode'], '会计年度': row['Year'], '公司类型': row['Ftyp'], '申请时间': row['Aplctm'],
                '数字经济专利申请': count}
     output_data = output_data._append(new_row, ignore_index=True)
